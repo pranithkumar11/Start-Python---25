@@ -1,4 +1,4 @@
-'''''A,B=2,4
+A,B=2,4
 c=4
 print((A*B)+c)
 A ,B = 2, 4
@@ -16,7 +16,7 @@ print(c)# it print negative value
 a = int(input("Enter a: "))
 b = int(input("Enter b: "))
 c = a % b
-print(c)'''
+print(c)
 
 # take input form keyboard
 name = input("name: ")
@@ -30,3 +30,26 @@ name = input("name: ")
 age = int(input("age: "))
 price = float(input("price: "))
 print("my name",name,"age",age,"I am",age,"years old and my  is")
+
+
+
+
+
+
+
+
+
+
+
+
+
+ light = input("light" :)
+    if light == "0":
+        print("red")
+    elif light == "1":
+        print("green")
+    elif light == "2":
+        print("yellow")
+    else:
+        print("light is broken")
+

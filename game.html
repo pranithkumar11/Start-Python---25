@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Add with Lines — Game Portal</title>
+  <style>
+    :root{ --bg:#071430; --card:#061022; --accent:#7dd3fc; --muted:#9ca3af; --white:#f8fafc }
+    *{box-sizing:border-box}
+    body{font-family:Inter,Segoe UI,system-ui,Arial; margin:0; background:linear-gradient(180deg,var(--bg),#0b1220); color:var(--white); display:flex; align-items:center; justify-content:center; min-height:100vh; padding:18px}
+    .container{width:920px; max-width:100%; background:rgba(255,255,255,0.03); border-radius:12px; padding:20px; box-shadow:0 8px 26px rgba(2,6,23,0.6)}
+    .header{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+    h1{font-size:20px;margin:0}
+    .instructions{color:var(--muted); font-size:13px}
+    .controls{display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px}
+    .input{display:flex; gap:8px; align-items:center}
+    .input input[type=number]{width:110px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.06); background:transparent; color:var(--white)}
+    .btn{background:var(--accent); color:#012; padding:8px 12px; border-radius:8px; border:none; cursor:pointer; font-weight:700}
+    .secondary{background:transparent; border:1px solid rgba(255,255,255,0.06); color:var(--white); padding:8px 12px; border-radius:8px; cursor:pointer}
+    .play-area{background:rgba(255,255,255,0.02); padding:16px; border-radius:10px}
+    .row{display:flex; align-items:center; gap:12px; margin-bottom:12px}
+    .label{width:120px; color:var(--muted)}
+    .sticks{flex:1; min-height:36px; padding:6px; display:flex; align-items:center; flex-wrap:wrap}
+    .stick{display:inline-block; width:8px; height:28px; background:linear-gradient(#fff,#ccc); margin-right:4px; border-radius:2px; box-shadow:0 1px 1px rgba(0,0,0,0.3); transform-origin:bottom; animation:pop 200ms ease}
+    @keyframes pop{from{transform:scaleY(0.2);opacity:0}to{transform:scaleY(1);opacity:1}}
+    .separator{height:3px; background:linear-gradient(90deg,#111,#ccc,#111); margin:8px 0; border-radius:2px}
+    .output{font-size:28px; font-weight:700; text-align:center; padding:8px; color:var(--accent)}
+    .small{font-size:12px;color:var(--muted)}
+    .controls-bottom{display:flex; gap:8px; align-items:center; margin-top:12px}
+    .badge{background:#06202b;padding:6px 10px;border-radius:999px;color:var(--muted);font-size:13px}
+    .footer{margin-top:14px;color:var(--muted); font-size:13px}
+    @media (max-width:600px){ .label{width:90px} .input input{width:80px} }
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <div class="header">
+      <h1>Add With Lines — Game Portal</h1>
+      <div class="instructions">Type two whole numbers, click <strong>Play</strong> to show sticks, then reveal the sum (or make a guess!)</div>
+    </div>
+
+    <div class="controls">
+      <div class="input">
+        <label class="label" for="a">A:</label>
+        <input id="a" type="number" min="0" value="5" aria-label="First number">
+      </div>
+      <div class="input">
+        <label class="label" for="b">B:</label>
+        <input id="b" type="number" min="0" value="9" aria-label="Second number">
+      </div>
+
+      <button id="playBtn" class="btn">Play</button>
+      <button id="revealBtn" class="secondary" title="Reveal sum">Reveal Sum</button>
+      <button id="randBtn" class="secondary">Random</button>
+      <button id="resetBtn" class="secondary">Reset</button>
+
+      <div style="margin-left:auto" class="badge" id="scoreBadge">Score: 0</div>
+    </div>
+
+    <div class="play-area" id="playArea" aria-live="polite">
+      <div class="row">
+        <div class="label">Number A</div>
+        <div class="sticks" id="sticksA" aria-hidden="true"></div>
+        <div class="small" id="countA">5</div>
+      </div>
+
+      <div class="row">
+        <div class="label">Number B</div>
+        <div class="sticks" id="sticksB" aria-hidden="true"></div>
+        <div class="small" id="countB">9</div>
+      </div>
+
+      <div class="separator" id="sep"></div>
+
+      <div class="output" id="output">?</div>
+
+      <div class="controls-bottom">
+        <label class="small">Guess the sum:</label>
+        <input id="guess" type="number" placeholder="Enter guess" style="padding:6px;border-radius:8px;border:1px solid rgba(255,255,255,0.06); background:transparent;color:var(--white); width:120px">
+        <button id="checkBtn" class="btn">Check</button>
+        <div class="small" id="msg" style="margin-left:8px"></div>
+      </div>
+    </div>
+
+    <div class="footer">Tip: Press Enter while focus is in either number input to Play. Large numbers are scaled for display.</div>
+  </div>
+
+  <script>
+    const aInp = document.getElementById('a');
+    const bInp = document.getElementById('b');
+    const playBtn = document.getElementById('playBtn');
+    const revealBtn = document.getElementById('revealBtn');
+    const randBtn = document.getElementById('randBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const sticksA = document.getElementById('sticksA');
+    const sticksB = document.getElementById('sticksB');
+    const output = document.getElementById('output');
+    const countA = document.getElementById('countA');
+    const countB = document.getElementById('countB');
+    const guessInp = document.getElementById('guess');
+    const checkBtn = document.getElementById('checkBtn');
+    const msg = document.getElementById('msg');
+    const scoreBadge = document.getElementById('scoreBadge');
+
+    let score = 0;
+    let currentA = 5;
+    let currentB = 9;
+    const MAX_STICKS = 100; // cap for visual sticks
+
+    function clampNonNegative(n){
+      n = Number(n) || 0;
+      if(n < 0) n = 0;
+      return Math.floor(n);
+    }
+
+    function renderSticks(count, container){
+      container.innerHTML = '';
+      const n = clampNonNegative(count);
+      if(n === 0){
+        container.textContent = '(none)';
+        return;
+      }
+      if(n <= MAX_STICKS){
+        for(let i=0;i<n;i++){
+          const s = document.createElement('span');
+          s.className = 'stick';
+          container.appendChild(s);
+        }
+      } else {
+        // scaled representation: show 40 sticks scaled down
+        const scaled = 40;
+        const factor = Math.ceil(n / scaled);
+        for(let i=0;i<scaled;i++){
+          const s = document.createElement('span');
+          s.className = 'stick';
+          s.style.height = (16 + (i % 3) * 6) + 'px';
+          container.appendChild(s);
+        }
+        const note = document.createElement('div');
+        note.className = 'small';
+        note.style.marginLeft = '8px';
+        note.textContent = `(${n} total — 1 displayed = ${factor})`;
+        container.appendChild(note);
+      }
+    }
+
+    function showOnlySum(){
+      sticksA.style.opacity = '0';
+      sticksB.style.opacity = '0';
+      countA.textContent = '';
+      countB.textContent = '';
+      output.textContent = (currentA + currentB);
+    }
+
+    function revealSum(){
+      output.textContent = (currentA + currentB);
+    }
+
+    function play(){
+      msg.textContent = '';
+      currentA = clampNonNegative(aInp.value);
+      currentB = clampNonNegative(bInp.value);
+      countA.textContent = currentA;
+      countB.textContent = currentB;
+      renderSticks(currentA, sticksA);
+      renderSticks(currentB, sticksB);
+      sticksA.style.opacity = '1';
+      sticksB.style.opacity = '1';
+      output.textContent = '?';
+      guessInp.value = '';
+      // After a short delay, hide sticks and show only sum (same behavior as original code)
+      setTimeout(() => {
+        showOnlySum();
+      }, 1600);
+    }
+
+    function randomChallenge(){
+      aInp.value = Math.floor(Math.random()*20)+1;
+      bInp.value = Math.floor(Math.random()*20)+1;
+      play();
+    }
+
+    function reset(){
+      aInp.value = 5;
+      bInp.value = 9;
+      score = 0;
+      scoreBadge.textContent = 'Score: 0';
+      play();
+    }
+
+    function checkGuess(){
+      const guess = clampNonNegative(guessInp.value);
+      const actual = currentA + currentB;
+      if(guess === actual){
+        msg.textContent = 'Correct 🎉';
+        score++;
+        scoreBadge.textContent = 'Score: ' + score;
+      } else {
+        msg.textContent = 'Not yet — try again';
+      }
+    }
+
+    // event listeners
+    playBtn.addEventListener('click', play);
+    revealBtn.addEventListener('click', revealSum);
+    randBtn.addEventListener('click', randomChallenge);
+    resetBtn.addEventListener('click', reset);
+    checkBtn.addEventListener('click', checkGuess);
+
+    [aInp,bInp].forEach(input=>{
+      input.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter') play();
+      });
+    });
+
+    // initial render
+    play();
+  </script>
+</body>
+</html>
