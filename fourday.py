@@ -1,8 +1,17 @@
 # list and tuples
-list =["name",20,50.5]
-print(list)
-print(type(list))
-print(len(list))
-print(list[1])
-list.sort()
-print(list)
+student = [89,77,100000,23,56,9000,7000000]
+student = [str(x)for x in student]
+
+
+student.sort(reverse=True)
+student.sort()
+print(student)
+print(type(student))
+print(len(student))
+print(student[1])
+student.append(45)
+print(student)
+student.pop(1)
+print(student)
+student.insert(1,67)
+print(student)
